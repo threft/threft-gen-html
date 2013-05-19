@@ -31,6 +31,26 @@ func GenerateHtml(t *tidm.TIDM) {
 		os.Exit(1)
 	}
 
+	writePage("documents", &dataHeader{Title: "Documents (TODO)"}, tmplTodo, nil)
+	writePage("targets", &dataHeader{Title: "Targets (TODO)"}, tmplTodo, nil)
+
+	for docName, _ := range t.Documents {
+		dataHeaderTodo := &dataHeader{
+			Title: string(docName) + " (TODO)",
+		}
+		writePage("document-"+urlify(string(docName)), dataHeaderTodo, tmplTodo, nil)
+	}
+
+	for targetName, _ := range t.Targets {
+		if targetName == "*" {
+			targetName = "* (default)"
+		}
+		dataHeaderTodo := &dataHeader{
+			Title: string(targetName) + " (TODO)",
+		}
+		writePage("target-"+urlify(string(targetName)), dataHeaderTodo, tmplTodo, nil)
+	}
+
 	fmt.Println("Thank you for using threft-gen-html.")
 }
 
