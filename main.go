@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/jessevdk/go-flags"
+	"github.com/threft/threft-gen-html/htmlg"
 	"github.com/threft/threft/tidm"
 	"os"
 )
@@ -42,5 +42,6 @@ func main() {
 		fmt.Printf("Error reading TIDM from stdin: %s\n", err)
 		return
 	}
-	spew.Dump(t)
+
+	htmlg.GenerateHtml(t)
 }
