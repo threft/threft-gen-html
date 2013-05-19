@@ -9,6 +9,20 @@ import (
 	"sort"
 )
 
+var (
+	dataPagesDocuments []dataPageDocument
+	dataPagesTargets   []dataPageTarget
+)
+
+type dataPageDocument struct {
+	Name string
+	Url  string
+}
+type dataPageTarget struct {
+	Name string
+	Url  string
+}
+
 // entry point for gog
 func GenerateHtml(t *tidm.TIDM) {
 	err := writeStaticFiles()
@@ -17,12 +31,12 @@ func GenerateHtml(t *tidm.TIDM) {
 		os.Exit(1)
 	}
 
+	preparePagesData(t)
+
 	generateIndexPage(t)
 
-	generateDocumentPage(t)
 	generateDocumentPages(t)
 
-	generateTargetPage(t)
 	generateTargetPages(t)
 
 	generateDefinitionConstPages(t)
@@ -30,13 +44,51 @@ func GenerateHtml(t *tidm.TIDM) {
 	fmt.Println("Thank you for using threft-gen-html.")
 }
 
-func writePage(fileName string, thd *dataHeader, contentTemplate *template.Template, contentData interface{}) {
+func preparePagesData(t *tidm.TIDM) {
+	// prepare data on documents
+	docNames := []string{}
+	for docName, _ := range t.Documents {
+		docNames = append(docNames, string(docName))
+	}
+	sort.Strings(docNames)
+	for _, docName := range docNames {
+		dataPagesDocuments = append(dataPagesDocuments, dataPageDocument{
+			Name: docName,
+			Url:  "document-" + urlify(docName) + ".html",
+		})
+	}
+
+	// prepare data on targets
+	targetNames := []string{}
+	for targetName, _ := range t.Targets {
+		if targetName == "*" {
+			targetName = "* (default)"
+		}
+		targetNames = append(targetNames, string(targetName))
+	}
+	sort.Strings(targetNames)
+	for _, targetName := range targetNames {
+		dataPagesTargets = append(dataPagesTargets, dataPageTarget{
+			Name: targetName,
+			Url:  fmt.Sprintf("target-%s.html", urlify(targetName)),
+		})
+	}
+}
+
+func writePage(fileName string, title string, contentTemplate *template.Template, contentData interface{}) {
+	// prepare dataHeader object
+	dataHeader := &dataHeader{
+		Title:     title,
+		Documents: dataPagesDocuments,
+		Targets:   dataPagesTargets,
+	}
+
 	pageFile, err := os.Create(fileName + ".html")
 	if err != nil {
 		fmt.Printf("Error creating file '%s'. %s\n", fileName, err)
 	}
 
-	err = tmplHeader.Execute(pageFile, thd)
+	err = tmplHeader.Execute(pageFile, dataHeader)
 	if err != nil {
 		fmt.Printf("Error executing tmplHeader. %s\n", err)
 		os.Exit(1)
@@ -55,35 +107,21 @@ func writePage(fileName string, thd *dataHeader, contentTemplate *template.Templ
 	}
 }
 
-// generates targets.html
-func generateTargetPage(t *tidm.TIDM) {
-	writePage("targets", &dataHeader{Title: "Targets (TODO)"}, tmplTodo, nil)
-}
-
 // generates target-tName.html
 func generateTargetPages(t *tidm.TIDM) {
 	for targetName, _ := range t.Targets {
 		if targetName == "*" {
 			targetName = "* (default)"
 		}
-		dataHeaderTodo := &dataHeader{
-			Title: string(targetName) + " (TODO)",
-		}
-		writePage("target-"+urlify(string(targetName)), dataHeaderTodo, tmplTodo, nil)
+		pageTitle := string(targetName) + " (TODO)"
+		writePage("target-"+urlify(string(targetName)), pageTitle, tmplTodo, nil)
 	}
-}
-
-// generates documents.html
-func generateDocumentPage(t *tidm.TIDM) {
-	writePage("documents", &dataHeader{Title: "Documents (TODO)"}, tmplTodo, nil)
 }
 
 // generates document-dName.html
 func generateDocumentPages(t *tidm.TIDM) {
 	for docName, doc := range t.Documents {
-		dataHeader := &dataHeader{
-			Title: "Document - " + string(docName),
-		}
+		pageTitle := "Document - " + string(docName)
 		dataDocument := &dataDocument{
 			Name: string(docName),
 		}
@@ -102,7 +140,7 @@ func generateDocumentPages(t *tidm.TIDM) {
 		}
 
 		// write document page
-		writePage("document-"+urlify(string(docName)), dataHeader, tmplDocument, dataDocument)
+		writePage("document-"+urlify(string(docName)), pageTitle, tmplDocument, dataDocument)
 	}
 }
 
@@ -110,55 +148,22 @@ func generateDocumentPages(t *tidm.TIDM) {
 func generateDefinitionConstPages(t *tidm.TIDM) {
 	for docName, doc := range t.Documents {
 		for identifierName, _ := range doc.Consts {
-			dataHeader := &dataHeader{
-				Title: fmt.Sprintf("Constant definition - %s - (%s)", identifierName, docName),
-			}
-			writePage(fmt.Sprintf("definition-const-%s-%s", urlify(string(docName)), urlify(string(identifierName))), dataHeader, tmplTodo, nil)
+			pageTitle := fmt.Sprintf("Constant definition - %s - (%s)", identifierName, docName)
+			writePage(fmt.Sprintf("definition-const-%s-%s", urlify(string(docName)), urlify(string(identifierName))), pageTitle, tmplTodo, nil)
 		}
 	}
 }
 
 // generates index.html
 func generateIndexPage(t *tidm.TIDM) {
-	dataHeader := &dataHeader{
-		Title: "index",
-	}
-
 	data := &dataIndex{
 		CountDocuments: len(t.Documents),
+		Documents:      dataPagesDocuments,
 		CountTargets:   len(t.Targets),
+		Targets:        dataPagesTargets,
 	}
 
-	// prepare data on documents
-	docNames := []string{}
-	for docName, _ := range t.Documents {
-		docNames = append(docNames, string(docName))
-	}
-	sort.Strings(docNames)
-	for _, docName := range docNames {
-		data.Documents = append(data.Documents, dataIndexDocument{
-			Name: docName,
-			Url:  "document-" + urlify(docName) + ".html",
-		})
-	}
-
-	// prepare data on targets
-	targetNames := []string{}
-	for targetName, _ := range t.Targets {
-		if targetName == "*" {
-			targetName = "* (default)"
-		}
-		targetNames = append(targetNames, string(targetName))
-	}
-	sort.Strings(targetNames)
-	for _, targetName := range targetNames {
-		data.Targets = append(data.Targets, dataIndexTarget{
-			Name: targetName,
-			Url:  fmt.Sprintf("target-%s.html", urlify(targetName)),
-		})
-	}
-
-	writePage("index", dataHeader, tmplIndex, data)
+	writePage("index", "index", tmplIndex, data)
 }
 
 // characters to replace with an underscore to have pretty url's

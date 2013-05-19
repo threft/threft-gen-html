@@ -14,6 +14,8 @@ type dataHeader struct {
 	PageIndexActive     bool
 	PageDocumentsActive bool
 	PageTargetsActive   bool
+	Documents           []dataPageDocument
+	Targets             []dataPageTarget
 }
 
 func init() {
@@ -40,9 +42,23 @@ func init() {
 				<div class="container">
 					<a class="brand" href="./index.html">Threftdoc</a>
 					<ul class="nav">
-						<li {{if .PageIndexActive}} class="active"{{end}}><a href="./index.html" title="Index" >Index</a></li>
-						<li {{if .PageDocumentsActive}} class="active"{{end}}><a href="./documents.html" title="Documents" >Documents</a></li>
-						<li {{if .PageTargetsActive}} class="active"{{end}}><a href="./targets.html" title="Targets" >Targets</a></li>
+						<li><a href="./index.html" title="Index" >Index</a></li>
+						<li class="dropdown">
+							<a class="dropdown-toggle" data-toggle="dropdown" href="#">Documents</a>
+							<ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
+								{{range .Documents}}
+									<li><a href="{{.Url}}" >{{.Name}}</a></li>
+								{{end}}
+							</ul>
+						</li>
+						<li class="dropdown">
+							<a class="dropdown-toggle" data-toggle="dropdown" href="#">Targets</a>
+							<ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
+								{{range .Targets}}
+									<li><a href="{{.Url}}" >{{.Name}}</a></li>
+								{{end}}
+							</ul>
+						</li>
 					</ul>
 				</div>
 			</div>
@@ -64,6 +80,8 @@ func init() {
 				</p>
 			</footer>
 		</div>
+		<script src="jquery.min.js" ></script>
+		<script src="bootstrap.min.js" ></script>
 	</body>
 </html>`)
 	if err != nil {

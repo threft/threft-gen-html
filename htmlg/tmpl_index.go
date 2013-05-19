@@ -8,17 +8,9 @@ import (
 
 type dataIndex struct {
 	CountDocuments int
-	Documents      []dataIndexDocument
+	Documents      []dataPageDocument
 	CountTargets   int
-	Targets        []dataIndexTarget
-}
-type dataIndexDocument struct {
-	Name string
-	Url  string
-}
-type dataIndexTarget struct {
-	Name string
-	Url  string
+	Targets        []dataPageTarget
 }
 
 var tmplIndex *template.Template
