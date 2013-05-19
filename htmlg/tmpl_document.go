@@ -8,6 +8,16 @@ import (
 
 var tmplDocument *template.Template
 
+type dataDocument struct {
+	Name      string
+	Constants []dataDocumentConst
+}
+
+type dataDocumentConst struct {
+	Name string
+	Url  string
+}
+
 func init() {
 	var err error
 	tmplDocument, err = template.New("document").Parse(`
@@ -15,7 +25,9 @@ func init() {
 			<div class="span4" >
 				<h4>Constants</h4>
 				<ul>
-					<li>fdsa</li>
+					{{range .Constants}}
+						<li><a href="{{.Url}}" >{{.Name}}</a></li>
+					{{end}}
 				</ul>
 			</div>
 			<div class="span4" >

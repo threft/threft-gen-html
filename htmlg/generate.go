@@ -9,6 +9,7 @@ import (
 	"sort"
 )
 
+// entry point for gog
 func GenerateHtml(t *tidm.TIDM) {
 	err := writeStaticFiles()
 	if err != nil {
@@ -16,32 +17,15 @@ func GenerateHtml(t *tidm.TIDM) {
 		os.Exit(1)
 	}
 
-	err = writeIndex(t)
-	if err != nil {
-		fmt.Printf("Error: %s", err)
-		os.Exit(1)
-	}
+	generateIndexPage(t)
 
-	writePage("documents", &dataHeader{Title: "Documents (TODO)"}, tmplTodo, nil)
+	generateDocumentPage(t)
+	generateDocumentPages(t)
 
-	writePage("targets", &dataHeader{Title: "Targets (TODO)"}, tmplTodo, nil)
+	generateTargetPage(t)
+	generateTargetPages(t)
 
-	for docName, _ := range t.Documents {
-		dataHeaderTodo := &dataHeader{
-			Title: "Document - " + string(docName),
-		}
-		writePage("document-"+urlify(string(docName)), dataHeaderTodo, tmplDocument, nil)
-	}
-
-	for targetName, _ := range t.Targets {
-		if targetName == "*" {
-			targetName = "* (default)"
-		}
-		dataHeaderTodo := &dataHeader{
-			Title: string(targetName) + " (TODO)",
-		}
-		writePage("target-"+urlify(string(targetName)), dataHeaderTodo, tmplTodo, nil)
-	}
+	generateDefinitionConstPages(t)
 
 	fmt.Println("Thank you for using threft-gen-html.")
 }
@@ -71,7 +55,71 @@ func writePage(fileName string, thd *dataHeader, contentTemplate *template.Templ
 	}
 }
 
-func writeIndex(t *tidm.TIDM) error {
+// generates targets.html
+func generateTargetPage(t *tidm.TIDM) {
+	writePage("targets", &dataHeader{Title: "Targets (TODO)"}, tmplTodo, nil)
+}
+
+// generates target-tName.html
+func generateTargetPages(t *tidm.TIDM) {
+	for targetName, _ := range t.Targets {
+		if targetName == "*" {
+			targetName = "* (default)"
+		}
+		dataHeaderTodo := &dataHeader{
+			Title: string(targetName) + " (TODO)",
+		}
+		writePage("target-"+urlify(string(targetName)), dataHeaderTodo, tmplTodo, nil)
+	}
+}
+
+// generates documents.html
+func generateDocumentPage(t *tidm.TIDM) {
+	writePage("documents", &dataHeader{Title: "Documents (TODO)"}, tmplTodo, nil)
+}
+
+// generates document-dName.html
+func generateDocumentPages(t *tidm.TIDM) {
+	for docName, doc := range t.Documents {
+		dataHeader := &dataHeader{
+			Title: "Document - " + string(docName),
+		}
+		dataDocument := &dataDocument{
+			Name: string(docName),
+		}
+
+		// prepare constant data
+		constNames := []string{}
+		for identifierName, _ := range doc.Consts {
+			constNames = append(constNames, string(identifierName))
+		}
+		sort.Strings(constNames)
+		for _, constName := range constNames {
+			dataDocument.Constants = append(dataDocument.Constants, dataDocumentConst{
+				Name: constName,
+				Url:  fmt.Sprintf("definition-const-%s-%s.html", urlify(string(docName)), urlify(constName)),
+			})
+		}
+
+		// write document page
+		writePage("document-"+urlify(string(docName)), dataHeader, tmplDocument, dataDocument)
+	}
+}
+
+// generates definition-const-docName-identifierName.html
+func generateDefinitionConstPages(t *tidm.TIDM) {
+	for docName, doc := range t.Documents {
+		for identifierName, _ := range doc.Consts {
+			dataHeader := &dataHeader{
+				Title: fmt.Sprintf("Constant definition - %s - (%s)", identifierName, docName),
+			}
+			writePage(fmt.Sprintf("definition-const-%s-%s", urlify(string(docName)), urlify(string(identifierName))), dataHeader, tmplTodo, nil)
+		}
+	}
+}
+
+// generates index.html
+func generateIndexPage(t *tidm.TIDM) {
 	dataHeader := &dataHeader{
 		Title: "index",
 	}
@@ -106,13 +154,11 @@ func writeIndex(t *tidm.TIDM) error {
 	for _, targetName := range targetNames {
 		data.Targets = append(data.Targets, dataIndexTarget{
 			Name: targetName,
-			Url:  "target-" + urlify(targetName) + ".html",
+			Url:  fmt.Sprintf("target-%s.html", urlify(targetName)),
 		})
 	}
 
 	writePage("index", dataHeader, tmplIndex, data)
-
-	return nil
 }
 
 // characters to replace with an underscore to have pretty url's
