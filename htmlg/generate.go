@@ -66,7 +66,10 @@ func writeIndex(t *tidm.TIDM) error {
 
 	data := &dataIndex{
 		CountDocuments: len(t.Documents),
+		CountTargets:   len(t.Targets),
 	}
+
+	// prepare data on documents
 	docNames := []string{}
 	for docName, _ := range t.Documents {
 		docNames = append(docNames, string(docName))
@@ -79,13 +82,31 @@ func writeIndex(t *tidm.TIDM) error {
 		})
 	}
 
+	// prepare data on targets
+	targetNames := []string{}
+	for targetName, _ := range t.Targets {
+		if targetName == "*" {
+			targetName = "* (default)"
+		}
+		targetNames = append(targetNames, string(targetName))
+	}
+	sort.Strings(targetNames)
+	for _, targetName := range targetNames {
+		data.Targets = append(data.Targets, dataIndexTarget{
+			Name: targetName,
+			Url:  "target-" + urlify(targetName) + ".html",
+		})
+	}
+
 	writePage("index", dataHeader, tmplIndex, data)
 
 	return nil
 }
 
-var regexpUrlify = regexp.MustCompile(`[\.]`)
+// characters to replace with an underscore to have pretty url's
+var regexpUrlify = regexp.MustCompile(`[\. ]`)
 
+// replace certain characters with underscore to have a pretty url
 func urlify(input string) string {
 	return regexpUrlify.ReplaceAllString(input, "_")
 }

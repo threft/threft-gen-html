@@ -37,7 +37,7 @@ func main() {
 		fmt.Println("threft-gen-html started, reading TIDM from stdin.")
 	}
 
-	t, err := tidm.ReadFrom(os.Stdin)
+	t, err := tidm.DecodeFrom(os.Stdin)
 	if err != nil {
 		fmt.Printf("Error reading TIDM from stdin: %s\n", err)
 		return
