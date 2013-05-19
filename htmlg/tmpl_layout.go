@@ -47,6 +47,7 @@ func init() {
 				</div>
 			</div>
 		</div>
+		<div class="container">
 			`)
 	if err != nil {
 		fmt.Printf("Error parsing header template: %s\n", err)
@@ -54,6 +55,7 @@ func init() {
 	}
 
 	tmplFooter, err = template.New("footer").Parse(`
+		</div>
 		<div class="container">
 			<hr>
 			<footer>

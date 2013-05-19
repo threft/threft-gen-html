@@ -26,7 +26,7 @@ var tmplIndex *template.Template
 func init() {
 	var err error
 	tmplIndex, err = template.New("index").Parse(`
-		<div class="container">
+		<div class="row">
 			<div class="span4" >
 				<h4>{{.CountDocuments}} documents:</h4>
 				<ul>

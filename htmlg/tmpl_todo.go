@@ -11,7 +11,7 @@ var tmplTodo *template.Template
 func init() {
 	var err error
 	tmplTodo, err = template.New("index").Parse(`
-		<div class="container">
+		<div class="row">
 			<div class="span12" >
 				This page is not being generated yet.<br/>
 				<a href="#" onClick="history.go(-1);" class="btn btn-inverse" >Go back</a>

@@ -9,15 +9,6 @@ import (
 	"sort"
 )
 
-// urls:
-// index
-// documents
-// document-dname
-// targets
-// target-tname
-// namespace-tname-nname
-// definition-dname-identifiername
-
 func GenerateHtml(t *tidm.TIDM) {
 	err := writeStaticFiles()
 	if err != nil {
@@ -32,13 +23,14 @@ func GenerateHtml(t *tidm.TIDM) {
 	}
 
 	writePage("documents", &dataHeader{Title: "Documents (TODO)"}, tmplTodo, nil)
+
 	writePage("targets", &dataHeader{Title: "Targets (TODO)"}, tmplTodo, nil)
 
 	for docName, _ := range t.Documents {
 		dataHeaderTodo := &dataHeader{
-			Title: string(docName) + " (TODO)",
+			Title: "Document - " + string(docName),
 		}
-		writePage("document-"+urlify(string(docName)), dataHeaderTodo, tmplTodo, nil)
+		writePage("document-"+urlify(string(docName)), dataHeaderTodo, tmplDocument, nil)
 	}
 
 	for targetName, _ := range t.Targets {
