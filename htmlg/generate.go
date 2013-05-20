@@ -9,6 +9,8 @@ import (
 	"sort"
 )
 
+var generatedPages = 0
+
 var (
 	dataPagesDocuments []dataPageDocument
 	dataPagesTargets   []dataPageTarget
@@ -39,9 +41,11 @@ func GenerateHtml(t *tidm.TIDM) {
 
 	generateTargetPages(t)
 
+	generateNamespacePages(t)
+
 	generateDefinitionConstPages(t)
 
-	fmt.Println("Thank you for using threft-gen-html.")
+	fmt.Printf("Generated %d html pages.\n", generatedPages)
 }
 
 func preparePagesData(t *tidm.TIDM) {
@@ -75,7 +79,7 @@ func preparePagesData(t *tidm.TIDM) {
 	}
 }
 
-func writePage(fileName string, title string, contentTemplate *template.Template, contentData interface{}) {
+func writePage(fileName string, title string, pateTemplate *template.Template, pageData interface{}) {
 	// prepare dataHeader object
 	dataHeader := &dataHeader{
 		Title:     title,
@@ -94,9 +98,9 @@ func writePage(fileName string, title string, contentTemplate *template.Template
 		os.Exit(1)
 	}
 
-	err = contentTemplate.Execute(pageFile, contentData)
+	err = pateTemplate.Execute(pageFile, pageData)
 	if err != nil {
-		fmt.Printf("Error executing contentTemplate. %s\n", err)
+		fmt.Printf("Error executing page template. %s\n", err)
 		os.Exit(1)
 	}
 
@@ -105,16 +109,45 @@ func writePage(fileName string, title string, contentTemplate *template.Template
 		fmt.Printf("Error executing tmplFooter. %s\n", err)
 		os.Exit(1)
 	}
+
+	generatedPages++
 }
 
 // generates target-tName.html
 func generateTargetPages(t *tidm.TIDM) {
-	for targetName, _ := range t.Targets {
+	for targetName, target := range t.Targets {
 		if targetName == "*" {
 			targetName = "* (default)"
 		}
-		pageTitle := string(targetName) + " (TODO)"
-		writePage("target-"+urlify(string(targetName)), pageTitle, tmplTodo, nil)
+		pageTitle := string(targetName)
+		dataTarget := &dataTarget{
+			Name: string(targetName),
+		}
+		namespaceNames := []string{}
+		for namespaceName, _ := range target.Namespaces {
+			namespaceNames = append(namespaceNames, string(namespaceName))
+		}
+		sort.Strings(namespaceNames)
+		for _, namespaceName := range namespaceNames {
+			dataTarget.Namespaces = append(dataTarget.Namespaces, dataTargetNamespace{
+				Name: namespaceName,
+				Url:  fmt.Sprintf("namespace-%s-%s.html", urlify(string(targetName)), urlify(namespaceName)),
+			})
+		}
+		writePage("target-"+urlify(string(targetName)), pageTitle, tmplTarget, dataTarget)
+	}
+}
+
+// generates namespace-tName-nName.html
+func generateNamespacePages(t *tidm.TIDM) {
+	for targetName, target := range t.Targets {
+		if targetName == "*" {
+			targetName = "* (default)"
+		}
+		for namespaceName, _ := range target.Namespaces {
+			pageTitle := string(targetName) + " - " + string(namespaceName)
+			writePage("namespace-"+urlify(string(targetName))+"-"+urlify(string(namespaceName)), pageTitle, tmplTodo, nil)
+		}
 	}
 }
 
@@ -157,10 +190,8 @@ func generateDefinitionConstPages(t *tidm.TIDM) {
 // generates index.html
 func generateIndexPage(t *tidm.TIDM) {
 	data := &dataIndex{
-		CountDocuments: len(t.Documents),
-		Documents:      dataPagesDocuments,
-		CountTargets:   len(t.Targets),
-		Targets:        dataPagesTargets,
+		Documents: dataPagesDocuments,
+		Targets:   dataPagesTargets,
 	}
 
 	writePage("index", "index", tmplIndex, data)

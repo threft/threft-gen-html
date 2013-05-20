@@ -7,10 +7,8 @@ import (
 )
 
 type dataIndex struct {
-	CountDocuments int
-	Documents      []dataPageDocument
-	CountTargets   int
-	Targets        []dataPageTarget
+	Documents []dataPageDocument
+	Targets   []dataPageTarget
 }
 
 var tmplIndex *template.Template
@@ -20,7 +18,7 @@ func init() {
 	tmplIndex, err = template.New("index").Parse(`
 		<div class="row">
 			<div class="span4" >
-				<h4>{{.CountDocuments}} documents:</h4>
+				<h4>{{len .Documents}} documents:</h4>
 				<ul>
 					{{range .Documents}}
 						<li><a href="{{.Url}}" >{{.Name}}</a></li>
@@ -28,7 +26,7 @@ func init() {
 				</ul>
 			</div>
 			<div class="span4" >
-				<h4>{{.CountTargets}} targets:</h4>
+				<h4>{{len .Targets}} targets:</h4>
 				<ul>
 					{{range .Targets}}
 						<li><a href="{{.Url}}" >{{.Name}}</a></li>
