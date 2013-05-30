@@ -43,7 +43,15 @@ func GenerateHtml(t *tidm.TIDM) {
 
 	generateNamespacePages(t)
 
+	generateDefinitionTypedefPages(t)
+
 	generateDefinitionConstPages(t)
+
+	generateDefinitionEnumPages(t)
+
+	generateDefinitionStructPages(t)
+
+	generateDefinitionServicePages(t)
 
 	fmt.Printf("Generated %d html pages.\n", generatedPages)
 }
@@ -159,6 +167,19 @@ func generateDocumentPages(t *tidm.TIDM) {
 			Name: string(docName),
 		}
 
+		// prepare typedef data
+		typedefNames := []string{}
+		for identifierName, _ := range doc.Typedefs {
+			typedefNames = append(typedefNames, string(identifierName))
+		}
+		sort.Strings(typedefNames)
+		for _, typedefName := range typedefNames {
+			dataDocument.Typedefs = append(dataDocument.Typedefs, dataDocumentTypedef{
+				Name: typedefName,
+				Url:  fmt.Sprintf("definition-typedef-%s-%s.html", urlify(string(docName)), urlify(typedefName)),
+			})
+		}
+
 		// prepare constant data
 		constNames := []string{}
 		for identifierName, _ := range doc.Consts {
@@ -177,12 +198,52 @@ func generateDocumentPages(t *tidm.TIDM) {
 	}
 }
 
+// generates definition-typedef-docName-identifierName.html
+func generateDefinitionTypedefPages(t *tidm.TIDM) {
+	for docName, doc := range t.Documents {
+		for identifierName, _ := range doc.Typedefs {
+			pageTitle := fmt.Sprintf("Typedef definition - %s - (%s)", identifierName, docName)
+			writePage(fmt.Sprintf("definition-typedef-%s-%s", urlify(string(docName)), urlify(string(identifierName))), pageTitle, tmplTodo, nil)
+		}
+	}
+}
+
 // generates definition-const-docName-identifierName.html
 func generateDefinitionConstPages(t *tidm.TIDM) {
 	for docName, doc := range t.Documents {
 		for identifierName, _ := range doc.Consts {
-			pageTitle := fmt.Sprintf("Constant definition - %s - (%s)", identifierName, docName)
+			pageTitle := fmt.Sprintf("Const definition - %s - (%s)", identifierName, docName)
 			writePage(fmt.Sprintf("definition-const-%s-%s", urlify(string(docName)), urlify(string(identifierName))), pageTitle, tmplTodo, nil)
+		}
+	}
+}
+
+// generates definition-enum-docName-identifierName.html
+func generateDefinitionEnumPages(t *tidm.TIDM) {
+	for docName, doc := range t.Documents {
+		for identifierName, _ := range doc.Enums {
+			pageTitle := fmt.Sprintf("Enum definition - %s - (%s)", identifierName, docName)
+			writePage(fmt.Sprintf("definition-enum-%s-%s", urlify(string(docName)), urlify(string(identifierName))), pageTitle, tmplTodo, nil)
+		}
+	}
+}
+
+// generates definition-struct-docName-identifierName.html
+func generateDefinitionStructPages(t *tidm.TIDM) {
+	for docName, doc := range t.Documents {
+		for identifierName, _ := range doc.Structs {
+			pageTitle := fmt.Sprintf("Struct definition - %s - (%s)", identifierName, docName)
+			writePage(fmt.Sprintf("definition-struct-%s-%s", urlify(string(docName)), urlify(string(identifierName))), pageTitle, tmplTodo, nil)
+		}
+	}
+}
+
+// generates definition-service-docName-identifierName.html
+func generateDefinitionServicePages(t *tidm.TIDM) {
+	for docName, doc := range t.Documents {
+		for identifierName, _ := range doc.Services {
+			pageTitle := fmt.Sprintf("Service definition - %s - (%s)", identifierName, docName)
+			writePage(fmt.Sprintf("definition-service-%s-%s", urlify(string(docName)), urlify(string(identifierName))), pageTitle, tmplTodo, nil)
 		}
 	}
 }

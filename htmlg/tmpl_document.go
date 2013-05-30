@@ -10,7 +10,13 @@ var tmplDocument *template.Template
 
 type dataDocument struct {
 	Name      string
+	Typedefs  []dataDocumentTypedef
 	Constants []dataDocumentConst
+}
+
+type dataDocumentTypedef struct {
+	Name string
+	Url  string
 }
 
 type dataDocumentConst struct {
@@ -25,7 +31,9 @@ func init() {
 			<div class="span4" >
 				<h4>Type definitions</h4>
 				<ul>
-					<li>fdsa</li>
+					{{range .Typedefs}}
+						<li><a href="{{.Url}}" >{{.Name}}</a></li>
+					{{end}}
 				</ul>
 			</div>
 			<div class="span4" >
