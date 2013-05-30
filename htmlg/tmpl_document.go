@@ -23,6 +23,12 @@ func init() {
 	tmplDocument, err = template.New("document").Parse(`
 		<div class="row">
 			<div class="span4" >
+				<h4>Type definitions</h4>
+				<ul>
+					<li>fdsa</li>
+				</ul>
+			</div>
+			<div class="span4" >
 				<h4>Constants</h4>
 				<ul>
 					{{range .Constants}}
@@ -31,13 +37,7 @@ func init() {
 				</ul>
 			</div>
 			<div class="span4" >
-				<h4>Type definitions</h4>
-				<ul>
-					<li>fdsa</li>
-				</ul>
-			</div>
-			<div class="span4" >
-				<h4>Enums & Senums</h4>
+				<h4>Enums</h4>
 				<ul>
 					<li>fdsa</li>
 				</ul>
